@@ -7,7 +7,7 @@
 # ------------------------------------
 
 # current version of ImageOptim-CLI from package.json
-VERSION="1.14.8"
+VERSION="1.15.1"
 
 # {DirectoryPath} Absolute file system path to this shell script.
 CLI_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -130,7 +130,7 @@ function format_red {
 
 # Display usage information
 function usage {
-  echo "Usage: imageoptim [options]"
+  echo "Usage: imageOptim [options]"
   echo ""
   echo "Options:"
   echo ""
@@ -157,23 +157,23 @@ function examples {
   echo ""
   echo "This command will optimise all image files in your Awesome project."
   echo ""
-  echo "    imageoptim --directory ~/Sites/Awesome # [options]"
+  echo "    imageOptim --directory ~/Sites/Awesome # [options]"
   echo ""
   echo "### Optimise a filtered set of images"
   echo ""
   echo "This command will optimise just the .jpg files in your Awesome project."
   echo ""
-  echo "    find ~/Sites/Awesome -name '*.jpg' | imageoptim # [options]"
+  echo "    find ~/Sites/Awesome -name '*.jpg' | imageOptim # [options]"
   echo ""
   echo "### Passing additional options"
   echo ""
   echo "The long format for enabling options is as follows;"
   echo ""
-  echo "    imageoptim --jpeg-mini --image-alpha --quit --no-color --directory path/to/images"
+  echo "    imageOptim --jpeg-mini --image-alpha --quit --no-color --directory path/to/images"
   echo ""
   echo "The equivalent of the above in short format is as follows;"
   echo ""
-  echo "    imageoptim -j -a -q -d -c path/to/images"
+  echo "    imageOptim -j -a -q -d -c path/to/images"
   echo ""
   echo "### Adding to git pre-commit hook"
   echo ""
@@ -182,7 +182,7 @@ function examples {
   echo "aren't images will be ignored."
   echo ""
   echo "    images=$(git diff --exit-code --cached --name-only --diff-filter=ACM -- '*.png' '*.jpg')"
-  echo "    $(exit $?) || (echo "$images" | imageoptim && git add $images)"
+  echo "    $(exit $?) || (echo "$images" | imageOptim && git add $images)"
   echo ""
 }
 
@@ -325,8 +325,17 @@ function add_directory_option_to_index {
 # Remove any duplicate files in our index, which may have occurred when importing directories whose
 # images have already been gathered by other means.
 function remove_duplicate_indexes {
-  sort -f "$INDEX_FILE" | uniq > "$INDEX_FILE.uniq.txt"
+  sort -uf "$INDEX_FILE"  > "$INDEX_FILE.uniq.txt"
   mv "$INDEX_FILE.uniq.txt" "$INDEX_FILE"
+}
+
+# Check we actually got some files
+# test -s means exists and size > zero
+# See: man bash | less '+/^\s*CONDITIONAL'
+function check_index_exists {
+  if [ ! -s "$INDEX_FILE" ]; then
+    fatal "No files found by the find command or in the provided directory"
+  fi
 }
 
 # Read our index file into an Array.
@@ -339,6 +348,7 @@ function parse_index {
 function gather_paths_to_images {
   add_stdin_to_index
   add_directory_option_to_index
+  check_index_exists
   remove_duplicate_indexes
   parse_index
 }
